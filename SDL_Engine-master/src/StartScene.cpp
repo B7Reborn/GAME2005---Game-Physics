@@ -68,7 +68,7 @@ void StartScene::start()
 	m_pNumberLabel1->setParent(this);
 	addChild(m_pNumberLabel1);
 
-	m_pNumberLabel2 = new Label("NUMBER HERE", "Consolas", 40, blue, glm::vec2(800.0f, 200.0f));
+	m_pNumberLabel2 = new Label("101245691", "Consolas", 40, blue, glm::vec2(800.0f, 200.0f));
 	m_pNumberLabel2->setParent(this);
 	addChild(m_pNumberLabel2);
 
