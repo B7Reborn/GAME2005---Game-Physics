@@ -29,9 +29,12 @@ public:
 
 	// Function to move "particle" in a parabola towards its destination
 	void moveParticle();
+
+	// Function to update labels whenever numbers are changed
+	void updateLabels();
 private:
 	// IMGUI Function
-	void GUI_Function() const;
+	void GUI_Function();
 	std::string m_guiTitle;
 	
 	glm::vec2 m_mousePosition;
@@ -71,7 +74,7 @@ private:
 	float m_DetonatorYPos = 450.0f;
 	bool m_bInMotion = false;
 	float m_InitialVelocityY;
-	bool m_bLargerAngle = true;
+	bool m_bLargerAngle = false;
 };
 
 #endif /* defined (__PLAY_SCENE__) */

@@ -17,12 +17,15 @@ PlayScene::~PlayScene()
 
 void PlayScene::draw()
 {
-	if(EventManager::Instance().isIMGUIActive())
+	
+
+	drawDisplayList();
+
+	if (EventManager::Instance().isIMGUIActive())
 	{
 		GUI_Function();
 	}
-
-	drawDisplayList();
+	
 	SDL_SetRenderDrawColor(Renderer::Instance()->getRenderer(), 255, 255, 255, 255);
 }
 
@@ -85,14 +88,17 @@ void PlayScene::start()
 	m_pDetonatorSprite->getTransform()->position = glm::vec2(100.0f, 450.0f);
 	addChild(m_pDetonatorSprite);
 
-	// Back Button
-	m_pBackButton = new Button("../Assets/textures/backButton.png", "backButton", BACK_BUTTON);
-	m_pBackButton->getTransform()->position = glm::vec2(600.0f, 300.0f);
+	// Reset Button
+	m_pBackButton = new Button("../Assets/textures/ResetButton.png", "resetButton", BACK_BUTTON);
+	m_pBackButton->getTransform()->position = glm::vec2(150.0f, 200.0f);
 	m_pBackButton->addEventListener(CLICK, [&]()-> void
 	{
-		m_pBackButton->setActive(false);
-		m_TempTime = 0.0f;
-		m_pDetonatorSprite->getTransform()->position = m_pWookieSprite->getTransform()->position;
+		if (!m_bInMotion)
+		{
+			m_pBackButton->setActive(false);
+			m_TempTime = 0.0f;
+			m_pDetonatorSprite->getTransform()->position = m_pWookieSprite->getTransform()->position;
+		}
 	});
 
 	m_pBackButton->addEventListener(MOUSE_OVER, [&]()->void
@@ -106,13 +112,18 @@ void PlayScene::start()
 	});
 	addChild(m_pBackButton);
 
-	// Next Button
-	m_pNextButton = new Button("../Assets/textures/nextButton.png", "nextButton", NEXT_BUTTON);
-	m_pNextButton->getTransform()->position = glm::vec2(800.0f, 300.0f);
+	// Throw Button
+	m_pNextButton = new Button("../Assets/textures/ThrowButton.png", "throwButton", NEXT_BUTTON);
+	m_pNextButton->getTransform()->position = glm::vec2(350.0f, 200.0f);
 	m_pNextButton->addEventListener(CLICK, [&]()-> void
 	{
-		m_pNextButton->setActive(false);
-		m_bInMotion = true;
+		// Only throw if all values are valid, ie not nan values
+		if (!isnan(m_Distance) && !isnan(m_Speed) && !isnan(m_Gravity) && !isnan(m_Time) &&
+			!isnan(m_VelocityX) && !isnan(m_VelocityY) && !isnan(m_AngleDeg))
+		{
+			m_pNextButton->setActive(false);
+			m_bInMotion = true;
+		}
 	});
 
 	m_pNextButton->addEventListener(MOUSE_OVER, [&]()->void
@@ -128,62 +139,68 @@ void PlayScene::start()
 	addChild(m_pNextButton);
 
 	/* Instructions Label */
-	m_pInstructionsLabel = new Label("Press the backtick (`) character to toggle Debug View", "Consolas");
+	const SDL_Color yellow = { 255, 255, 0, 255 };
+	m_pInstructionsLabel = new Label("Press the backtick (`) character to toggle Options Menu", "Consolas", 20, yellow);
 	m_pInstructionsLabel->getTransform()->position = glm::vec2(Config::SCREEN_WIDTH * 0.5f, 550.0f);
 	addChild(m_pInstructionsLabel);
 
 	// Mathematics Labels
-	m_pDistanceLabel = new Label("Distance to Stormtroopers: " + std::to_string(m_Distance) + " meters", "Consolas", 16);
+	m_pDistanceLabel = new Label("Temp", "Consolas", 16);
 	m_pDistanceLabel->getTransform()->position = glm::vec2(900.0f, 40.0f);
 	addChild(m_pDistanceLabel);
 
-	m_pSpeedLabel = new Label("Speed of thermal detonator: " + std::to_string(m_Speed) + " meters per second", "Consolas", 16);
+	m_pSpeedLabel = new Label("Temp", "Consolas", 16);
 	m_pSpeedLabel->getTransform()->position = glm::vec2(900.0f, 80.0f);
 	addChild(m_pSpeedLabel);
 
-	// Before adding the angle label, we must first solve for the angle
-	solveForAngle();
-	m_pAngleLabel = new Label("Angle thermal detonator is thrown: " + std::to_string(m_AngleDeg) + " degrees", "Consolas", 16);
+	m_pAngleLabel = new Label("Temp", "Consolas", 16);
 	m_pAngleLabel->getTransform()->position = glm::vec2(900.0f, 120.0f);
 	addChild(m_pAngleLabel);
 
-	m_pGravityLabel = new Label("Gravity of planet: " + std::to_string(m_Gravity) + " meters per second squared", "Consolas", 16);
+	m_pGravityLabel = new Label("Temp", "Consolas", 16);
 	m_pGravityLabel->getTransform()->position = glm::vec2(900.0f, 160.0f);
 	addChild(m_pGravityLabel);
 
-	m_pTimeLabel = new Label("Total air time: " + std::to_string(m_Time) + " seconds", "Consolas", 16);
+	m_pTimeLabel = new Label("Temp", "Consolas", 16);
 	m_pTimeLabel->getTransform()->position = glm::vec2(900.0f, 200.0f);
 	addChild(m_pTimeLabel);
 
-	m_pVelXLabel = new Label("Initial X velocity: " + std::to_string(m_VelocityX) + " meters per second", "Consolas", 16);
+	m_pVelXLabel = new Label("Temp", "Consolas", 16);
 	m_pVelXLabel->getTransform()->position = glm::vec2(900.0f, 240.0f);
 	addChild(m_pVelXLabel);
 
-	m_pVelYLabel = new Label("Initial Y velocity: " + std::to_string(m_VelocityY) + " meters per second", "Consolas", 16);
+	m_pVelYLabel = new Label("Temp", "Consolas", 16);
 	m_pVelYLabel->getTransform()->position = glm::vec2(900.0f, 280.0f);
 	addChild(m_pVelYLabel);
+
+	solveForAngle();
 }
 
 void PlayScene::solveForAngle()
 {
-	// Solves for the kicking angle based on given variables using a rearranged formula for range
-	float numerator = m_Distance * m_Gravity;
-	float denominator = m_Speed * m_Speed;
-	float fractionResult = numerator / denominator;
-	m_AngleDeg = asin(fractionResult) / 2;
-
-	m_VelocityX = cos(m_AngleDeg) * m_Speed;
-	m_InitialVelocityY = m_VelocityY = sin(m_AngleDeg) * m_Speed;
-	m_Time = (2 * m_VelocityY) / m_Gravity;
-
-	m_AngleDeg = Util::Rad2Deg * m_AngleDeg;
-
-	if (m_bLargerAngle)
+	// Only solve for the angle if not in motion, otherwise the program will break
+	if (!m_bInMotion)
 	{
-		m_AngleDeg = 90 - m_AngleDeg;
-		m_VelocityX = cos(Util::Deg2Rad * m_AngleDeg) * m_Speed;
-		m_InitialVelocityY = m_VelocityY = sin(Util::Deg2Rad * m_AngleDeg) * m_Speed;
+		// Solves for the kicking angle based on given variables using a rearranged formula for range
+		float numerator = m_Distance * m_Gravity;
+		float denominator = m_Speed * m_Speed;
+		float fractionResult = numerator / denominator;
+		m_AngleDeg = asin(fractionResult) / 2;
+
+		m_VelocityX = cos(m_AngleDeg) * m_Speed;
+		m_InitialVelocityY = m_VelocityY = sin(m_AngleDeg) * m_Speed;
 		m_Time = (2 * m_VelocityY) / m_Gravity;
+
+		m_AngleDeg = Util::Rad2Deg * m_AngleDeg;
+
+		if (m_bLargerAngle)
+		{
+			m_AngleDeg = 90 - m_AngleDeg;
+			m_VelocityX = cos(Util::Deg2Rad * m_AngleDeg) * m_Speed;
+			m_InitialVelocityY = m_VelocityY = sin(Util::Deg2Rad * m_AngleDeg) * m_Speed;
+			m_Time = (2 * m_VelocityY) / m_Gravity;
+		}
+		updateLabels();
 	}
 }
 
@@ -212,7 +229,18 @@ void PlayScene::moveParticle()
 	
 }
 
-void PlayScene::GUI_Function() const
+void PlayScene::updateLabels()
+{
+	m_pDistanceLabel->setText("Distance to Stormtroopers: " + std::to_string(m_Distance) + " meters");
+	m_pSpeedLabel->setText("Speed of thermal detonator : " + std::to_string(m_Speed) + " meters per second");
+	m_pAngleLabel->setText("Angle thermal detonator is thrown: " + std::to_string(m_AngleDeg) + " degrees");
+	m_pGravityLabel->setText("Gravity of planet: " + std::to_string(m_Gravity) + " meters per second squared");
+	m_pTimeLabel->setText("Total air time: " + std::to_string(m_Time) + " seconds");
+	m_pVelXLabel->setText("Initial X velocity: " + std::to_string(m_VelocityX) + " meters per second");
+	m_pVelYLabel->setText("Initial Y velocity: " + std::to_string(m_VelocityY) + " meters per second");
+}
+
+void PlayScene::GUI_Function()
 {
 	// Always open with a NewFrame
 	ImGui::NewFrame();
@@ -220,21 +248,53 @@ void PlayScene::GUI_Function() const
 	// See examples by uncommenting the following - also look at imgui_demo.cpp in the IMGUI filter
 	//ImGui::ShowDemoWindow();
 	
-	ImGui::Begin("Your Window Title Goes Here", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_MenuBar);
+	ImGui::Begin("Program Options", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_MenuBar);
 
-	if(ImGui::Button("My Button"))
+	if(ImGui::Button("Switch Between Larger/Smaller Angle"))
 	{
-		std::cout << "My Button Pressed" << std::endl;
+		if (m_bLargerAngle)
+		{
+			std::cout << "Now outputting smaller angle" << std::endl;
+			m_bLargerAngle = false;
+		}
+		else
+		{
+			std::cout << "Now outputting larger angle" << std::endl;
+			m_bLargerAngle = true;
+		}
+		solveForAngle();
 	}
 
 	ImGui::Separator();
 
-	static float float3[3] = { 0.0f, 1.0f, 1.5f };
-	if(ImGui::SliderFloat3("My Slider", float3, 0.0f, 2.0f))
+	static float Distance[1] = { m_Distance };
+	if(ImGui::SliderFloat("Distance Slider (m)", Distance, 0.0f, 1000.0f))
 	{
-		std::cout << float3[0] << std::endl;
-		std::cout << float3[1] << std::endl;
-		std::cout << float3[2] << std::endl;
+		std::cout << Distance[0] << std::endl;
+		m_Distance = Distance[0];
+		if (!m_bInMotion)
+		{
+			m_pTrooperSprite->getTransform()->position.x = 100.0f + m_Distance;
+		}
+		solveForAngle();
+		std::cout << "---------------------------\n";
+	}
+
+	static float Speed[1] = { m_Speed };
+	if (ImGui::SliderFloat("Throwing Speed Slider (m/s)", Speed, 0.0f, 200.0f))
+	{
+		std::cout << Speed[0] << std::endl;
+		m_Speed = Speed[0];
+		solveForAngle();
+		std::cout << "---------------------------\n";
+	}
+
+	static float Gravity[1] = { m_Gravity };
+	if (ImGui::SliderFloat("Gravity Slider (m/s^2)", Gravity, 0.0f, 20.0f))
+	{
+		std::cout << Gravity[0] << std::endl;
+		m_Gravity = Gravity[0];
+		solveForAngle();
 		std::cout << "---------------------------\n";
 	}
 	
