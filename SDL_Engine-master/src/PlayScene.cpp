@@ -17,8 +17,6 @@ PlayScene::~PlayScene()
 
 void PlayScene::draw()
 {
-	
-
 	drawDisplayList();
 
 	if (EventManager::Instance().isIMGUIActive())
@@ -271,9 +269,9 @@ void PlayScene::GUI_Function()
 	if(ImGui::SliderFloat("Distance Slider (m)", Distance, 0.0f, 1000.0f))
 	{
 		std::cout << Distance[0] << std::endl;
-		m_Distance = Distance[0];
 		if (!m_bInMotion)
 		{
+			m_Distance = Distance[0];
 			m_pTrooperSprite->getTransform()->position.x = 100.0f + m_Distance;
 		}
 		solveForAngle();
@@ -284,7 +282,10 @@ void PlayScene::GUI_Function()
 	if (ImGui::SliderFloat("Throwing Speed Slider (m/s)", Speed, 0.0f, 200.0f))
 	{
 		std::cout << Speed[0] << std::endl;
-		m_Speed = Speed[0];
+		if (!m_bInMotion)
+		{
+			m_Speed = Speed[0];
+		}
 		solveForAngle();
 		std::cout << "---------------------------\n";
 	}
@@ -293,7 +294,10 @@ void PlayScene::GUI_Function()
 	if (ImGui::SliderFloat("Gravity Slider (m/s^2)", Gravity, 0.0f, 20.0f))
 	{
 		std::cout << Gravity[0] << std::endl;
-		m_Gravity = Gravity[0];
+		if (!m_bInMotion)
+		{
+			m_Gravity = Gravity[0];
+		}
 		solveForAngle();
 		std::cout << "---------------------------\n";
 	}
