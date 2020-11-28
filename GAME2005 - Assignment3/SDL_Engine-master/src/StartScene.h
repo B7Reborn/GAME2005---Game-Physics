@@ -23,10 +23,15 @@ public:
 private:
 	Label* m_pStartLabel{};
 	Label* m_pInstructionsLabel{};
+	Label* m_pNameLabel1{};
+	Label* m_pNameLabel2{};
+	Label* m_pNumberLabel1{};
+	Label* m_pNumberLabel2{};
 
 	Ship* m_pShip{};
 
-	Button* m_pStartButton;
+	Button* m_pSceneAButton;
+	Button* m_pSceneBButton;
 };
 
 #endif /* defined (__START_SCENE__) */

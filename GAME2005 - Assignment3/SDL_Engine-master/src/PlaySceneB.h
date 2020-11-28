@@ -7,6 +7,7 @@
 #include "Ball.h"
 #include "Button.h"
 #include "Label.h"
+#include "Background.h"
 
 class PlaySceneB : public Scene
 {
@@ -23,22 +24,43 @@ public:
 
 	void updateMousePosition();
 	void checkCollision();
+	void reset();
+	void circleCollision();
+	void squareCollision();
 private:
 	// IMGUI Function
-	void GUI_Function() const;
+	void GUI_Function();
 	std::string m_guiTitle;
 
 	glm::vec2 m_mousePosition;
+	bool m_running = true;
+	bool m_keyPressed = false;
 
 	// Objects
 	Brick* m_pBrick;
 	Ball* m_pBall;
+	Background* m_pBackground;
 
+	// Info Labels
+	Label* m_pBallWeight;
+	Label* m_pBrickWeight;
+	Label* m_pBallVelocityX;
+	Label* m_pBallVelocityY;
+	Label* m_pBrickVelocityX;
+	Label* m_pBrickVelocityY;
 
 	// UI Items
 	Button* m_pBackButton;
 	Button* m_pNextButton;
-	Label* m_pInstructionsLabel;
+	Label* m_pInstructionsLabel1;
+	Label* m_pInstructionsLabel2;
+	Label* m_pInstructionsLabel3;
+
+	// Value holders
+	// These are used to hold values to be input when the simulation is reset via spacebar
+	float m_tempBallWeight;
+	float m_tempBrickWeight;
+	Shape m_tempShape = CIRCLE;
 };
 
 #endif /* defined (__PLAY_SCENE__) */

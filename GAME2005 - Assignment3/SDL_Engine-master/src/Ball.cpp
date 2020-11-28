@@ -4,6 +4,8 @@
 Ball::Ball()
 {
 	TextureManager::Instance()->load("../Assets/textures/Ball.png", "Ball");
+	TextureManager::Instance()->load("../Assets/textures/Square.png", "Square");
+	TextureManager::Instance()->load("../Assets/textures/Triangle.png", "Triangle");
 
 	setWidth(32);
 	setHeight(32);
@@ -15,6 +17,7 @@ Ball::Ball()
 	setWeight(50);
 
 	setType(BALL);
+	setShape(CIRCLE);
 }
 
 Ball::~Ball()
@@ -26,7 +29,21 @@ void Ball::draw()
 	const auto x = getTransform()->position.x;
 	const auto y = getTransform()->position.y;
 
-	TextureManager::Instance()->drawText("Ball", x, y, 0, 255, true);
+	switch (getShape())
+	{
+	case CIRCLE:
+		TextureManager::Instance()->drawText("Ball", x, y, 0, 255, true);
+		break;
+	case SQUARE:
+		TextureManager::Instance()->drawText("Square", x, y, 0, 255, true);
+		break;
+	case TRIANGLE:
+		TextureManager::Instance()->drawText("Triangle", x, y, 0, 255, true);
+		break;
+	default:
+		break;
+	}
+	
 }
 
 void Ball::update()
@@ -94,4 +111,14 @@ void Ball::setWeight(float val)
 float Ball::getWeight()
 {
 	return m_weight;
+}
+
+void Ball::setShape(Shape newShape)
+{
+	m_currentShape = newShape;
+}
+
+Shape Ball::getShape()
+{
+	return m_currentShape;
 }
